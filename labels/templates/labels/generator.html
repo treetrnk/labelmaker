@@ -4,52 +4,35 @@
 
 <h1>Label Maker</h1>
 
-<form>
+<form action="/generate-pdf" method="post">
+	<input type="hidden" name="labelcount" id="labelCount" value='0' />
+	<input type="hidden" name="lastlabel" id="lastLabel" value='0' />
 	<table class="table table-hover table-striped">
 		<thead>
 			<tr>
-				<th>Image</th>
 				<th>SKU</th>
 				<th>FNSKU</th>
+				<th>Bag</th>
 				<th>Amount</th>
 				<th>Actions</th>
 			</tr>
 		</thead>
-		<tbody>
-			<tr>
-				<td><img src="https://images-na.ssl-images-amazon.com/images/I/71NeY9DKdJL._SL1500_.jpg" class="label-thumb" /></td>
-				<td>16G TF Ultra x2 R4ORG</td>
-				<td>B018SPX73K</td>
-				<td><input type="number" class="form-control" value="10" /></td>
-				<td class="text-center"><button type="button" class="btn btn-danger"><i class="fa fa-times"></i></button>
-			</tr>
-			<tr>
-				<td><img src="https://images-na.ssl-images-amazon.com/images/I/81O8a5wegpL._SL1454_.jpg" class="label-thumb" /></td>
-				<td>2G SD Para x10 EBSCloth</td>
-				<td>B00JYE81M2</td>
-				<td><input type="number" class="form-control" value="10" /></td>
-				<td class="text-center"><button type="button" class="btn btn-danger"><i class="fa fa-times"></i></button>
-			</tr>
-			<tr>
-				<td><img src="https://images-na.ssl-images-amazon.com/images/I/71F0vas5h5L._SL1500_.jpg" class="label-thumb" /></td>
-				<td>SDCZ50 016G 10PK EBD Lan x5</td>
-				<td>B00U05ZO1U</td>
-				<td><input type="number" class="form-control" value="10" /></td>
-				<td class="text-center"><button type="button" class="btn btn-danger"><i class="fa fa-times"></i></button>
-			</tr>
-			<tr>
+		<tbody id="labelList">
+		</tbody>
+		<tfoot>
+			<tr class="bg-dark">
 				<td colspan="3">
-					<select class="form-control" id="newProduct">
-						<option>-- Select a Listing --</option>
-						<option>16G TF Ultra x2 R4ORG (B018SPX73K)</option>
-						<option>2G SD Para x10 EBSCloth (B00JYE81M2)</option>
-						<option>SDCZ50 016G 10PK EBD Lan x5 (B00U05ZO1U)</option>
+					<select class="form-control" name="productSelect" id="productSelect">
+						<option value=''>-- Select a Listing --</option>
+						{% for label in labels %}
+							<option value="{{ label.fnsku }}" data-bag="{{ label.bag }}" data-id="{{ label.id }}">{{ label.sku }} ({{ label.fnsku }})</option>
+						{% endfor %}
 					</select>
 				</td>
-				<td><input type="number" class="form-control" value="30" /></td>
-				<td class="text-center"><button type="button" class="btn btn-success"><i class="fa fa-plus"></i> Add</button>
+				<td><input type="number" class="form-control" id="addAmount" value="30" /></td>
+				<td class="text-center"><button type="button" class="btn btn-success" id="addProduct"><i class="fa fa-plus"></i> Add</button>
 			</tr>
-		</tbody>
+		</tfoot>
 	</table>
 	<br />
 	<div class="text-center">
@@ -57,10 +40,53 @@
 		<a href="" class="btn btn-secondary btn-lg"><i class="fa fa-ban"></i> Reset</a>
 	</div>
 </form>
+<br /><br />
 
 <script type="text/javascript">
+
+	function addLabel(e) {
+		if (e.val() == '') {
+			return false;
+		}
+		var currentNumber = Number($('#lastLabel').val()) + 1;
+		$('#lastLabel').val(currentNumber);
+		$('#labelCount').val( Number($('#labelCount').val()) + 1 );
+		var newLabel = '<tr>' +
+				'<td>' + e.text() + '</td>' +
+				'<td>' + e.val() + '</td>' +
+				'<td>' + e.data('bag') + '</td>' +
+				'<td><input name="labelAmount' + currentNumber + '" type="number" class="form-control" value="' + $('#addAmount').val() + '" /></td>' +
+				'<td class="text-center">' + 
+					'<input name="labelId' + currentNumber + '" type="hidden" value="" />' +
+					'<button type="button" class="btn btn-danger removeLabel"><i class="fa fa-times"></i></button>' +
+				'</td>' +
+			'</tr>';
+				
+		$('#labelList').append(newLabel);
+	}
+ 	
+	function removeLabel(e) {
+		$('#labelCount').val( Number($('#labelCount').val()) - 1 );
+		e.parent().parent().fadeOut();
+		setTimeout(function() {
+			e.parent().parent().remove();
+		}, 1000);
+	}
+
+	$(document).on('click', '.removeLabel', function() {
+		removeLabel($(this));
+	});
+
 	$(document).ready(function() {
-		$('#newProduct').select2();
+		
+		$('#labelCount').val(0);
+		$('#lastLabel').val(0);
+
+		$('#productSelect').select2();
+
+		$('#addProduct').click(function() {
+			addLabel($('#productSelect option:selected'));
+		});	
 	});
 </script>
 
